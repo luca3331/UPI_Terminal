@@ -511,6 +511,41 @@ class TriList:
     """
     def __init__(self):
         self.tri_list = [[0 for j in range(6*13)]for i in range(6*13)]
+    
+    def make_tri_list(tri_list,field):
+        """
+        Parameters
+        tri_list 
+        field 
+        引数に1pの盤面情報も必要(仮field)
+        Attributes
+        ---------
+        color そのマスが何色かを示す(0,1,2,3,4)
+        i,j そのマスに対して状態行列を作るために，どこから走査するかを記録する変数
+        """
+        color = 0
+        for row in range(13):
+            for col in range(6):
+                """
+                [13-row][col]のマスから見たそれ以外のマスに対して，同色なら+1，異色なら-1，空きマスなら0を入れる
+                """
+                color = field[13-row][col]
+                i = row
+                j = col
+                for i in range(13):
+                    for j in range(6):
+                        if(field[13-row][col] == 0):
+                            tri_list[13-row][col] = 0
+                            continue
+                        if(field[13-row][col] == color):
+                            tri_list[13-row][col] = 1
+                            continue
+                        if(field[13-row][col] != color):
+                            tri_list[13-row][col] = -1
+                            continue
+
+                            
+                
 
 
 
