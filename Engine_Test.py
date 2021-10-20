@@ -488,6 +488,32 @@ class PositionsCommonInfo:
         self.rule = Rule()
         self.future_ojama = FutureOjama()
 
+class MatchList:
+    """
+    登録するテンプレート行列．
+    ひとまずテンプレート化する箇所は3段目までなので，6*3の容量にしてある．
+    Attributes
+    ----------
+    match_list
+        テンプレート行列の実数を格納するリスト
+
+    """
+    def __init__(self):
+        self.match_list = [[0 for j in range(6*3)]for i in range(6*3)]
+
+class TriList:
+    """
+    状態行列を格納するリスト
+    Attributes
+    ----------
+    tri_list
+        状態行列の3値(+1,-1,0)を格納するリスト
+    """
+    def __init__(self):
+        self.tri_list = [[0 for j in range(6*13)]for i in range(6*13)]
+
+
+
 def generate_moves(pos, tumo_pool):
     """
     この局面で着手可能な指し手のリストを生成する。
@@ -657,7 +683,6 @@ def chain_23(pos,positions_common):
     #     return 100000
     # print(pos.field.calc_solo_puyo())
     return pos.field.calc_solo_puyo()
-    
 
 class UpiPlayer:
     def __init__(self):
