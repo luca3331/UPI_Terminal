@@ -175,6 +175,21 @@ class Field:
             if y == 12:
                 result += '------\r\n'
         return result[:-2]
+    
+    def pretty_num(self):
+        """
+        Filedインスタンスを数字列に変換する．
+        """
+        result = ''
+        for y in reversed(range(self.Y_MAX)):
+            for x in range(self.X_MAX):
+                
+                result += str(self.get_puyo(x,y).value)
+            result += '\r\n'
+            if y == 12:
+                result += '------\r\n'
+        print(result)
+        return result
 
     def is_empty(self):
         """
@@ -544,11 +559,6 @@ class TriList:
                             tri_list[13-row][col] = -1
                             continue
 
-                            
-                
-
-
-
 def generate_moves(pos, tumo_pool):
     """
     この局面で着手可能な指し手のリストを生成する。
@@ -642,6 +652,8 @@ def search(pos1, pos2, positions_common, depth):
         return moves[0]
     pos1.do_move(move,positions_common)
     Field.pretty_print(pos1.field) #設置後の盤面を表す
+    # print(Field.pretty(pos1.field))
+    Field.pretty_num(pos1.field)
     return move
 
 def search_impl(pos1, pos2, positions_common, depth):
