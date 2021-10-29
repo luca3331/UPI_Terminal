@@ -4,7 +4,7 @@ import numpy as np
 import copy
 
 class Puyo(Enum):
-    """a
+    """
     ぷよの色を表す定数クラス。
     """
     EMPTY = 0
@@ -487,6 +487,104 @@ class Position:
                 future_ojama.time_until_fall_ojama = frame
         if future_ojama.fixed_ojama > 0:
             self.fall_ojama(positions_common)
+    
+
+    class MatchList:
+        """
+        テンプレート行列に関するクラスで，Fieldクラスの継承クラス．
+        ひとまずテンプレート化する箇所は3段目までなので，6*3の容量にしてある．
+        Attributes
+        ----------
+        match_list1
+            テンプレート行列の実数を格納するリスト．
+            213114
+            221333
+            113444
+        match_score 
+            合致度を計算する．0 <= return <= 1
+        max_score_proc
+            合致scoreの最大を計算する．
+        make_tri_list
+            与えられた盤面(y,x)から，(y*x)*(y*x)の状態行列を作る．
+
+        """
+        X_match = 6
+        Y_match = 3
+        
+        match_list1 = [[20,	-170,	-60,	-170,	-170,	-10,	20,	20,	-170,	-60,	-60,	-60,	-170,	-170,	-60,	-10,	-10,	-10],
+                [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
+                [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
+                [ -170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
+                [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
+                [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0],
+                [20,	-170,	-60,	-170,	-170,	-10,	20,	20,	-170,	-60,	-60,	-60,	-170,	-170,	-60,	-10,	-10,	-10],
+                [20,	-170,	-60,	-170,	-170,	-10,	20,	20,	-170,	-60,	-60,	-60,	-170,	-170,	-60,	-10,	-10,	-10],
+                [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
+                [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
+                [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
+                [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
+                [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
+                [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
+                [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
+                [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0],
+                [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0],
+                [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0]]
+            
+        def match_score(self,Tem_list,tri_list):
+            score = 0
+            # max_score = self.max_score_proc(self,self.match_list1)
+            for i in range(self.X_match*self.Y_match):
+                for j in range(self.X_match*self.Y_match):
+                    score += Tem_list[i][j] * tri_list[i][j]
+            return score
+        
+        def max_score_proc(self,match_list1):
+            max_score = 0
+            for y in range(len(match_list1)):
+                for x in range(len(match_list1[0])):
+                    max_score += abs(match_list1)
+            return max_score
+
+        def make_tri_list(self):
+            """
+            Parameters
+            tri_list 
+            field 
+            引数に1pの盤面情報も必要(仮field)
+            Attributes
+            ---------
+            color そのマスが何色かを示す(0,1,2,3,4)
+            i,j そのマスに対して状態行列を作るために，どこから走査するかを記録する変数
+            """
+            tri_list = np.full((self.Y_match*self.X_match,self.Y_match*self.X_match), Puyo.EMPTY)
+            color = 0
+            for y in range(self.Y_match):
+                for x in range(self.X_match):
+                    """
+                    [row][col]のマスから見たそれ以外のマスに対して，同色なら+1，異色なら-1，空きマスなら0を入れる
+                    """
+                    color = self.field[y][x]
+                    for i in range(self.Y_match):
+                        for j in range(self.X_match):
+                            if(self.field[i][j] == 0):
+                                tri_list[y*3+x][i*3+j] = 0
+                                continue
+                            if(self.field[i][j] == color):
+                                tri_list[y*3+x][i*3+j] = 1
+                                continue
+                            if(self.field[i][j] != color):
+                                tri_list[y*3+x][i*3+j] = -1
+                                continue
+            return tri_list
+
+        def score_comp(self,Tem_list,tri_list,field):
+            for list in range(len(field)):
+                print(list,'score = ',self.match_score(Tem_list,self.make_tri_list(tri_list,field[list])))
+        
+        def match_proc(self):
+            tri_list = self.make_tri_list()
+            Tem_list = self.match_list1
+            return self.match_score(Tem_list,tri_list)
 
 class FutureOjama:
     """
@@ -522,148 +620,6 @@ class PositionsCommonInfo:
         self.rule = Rule()
         self.future_ojama = FutureOjama()
 
-class MatchList:
-    """
-    テンプレート行列に関するクラス
-    ひとまずテンプレート化する箇所は3段目までなので，6*3の容量にしてある．
-    Attributes
-    ----------
-    match_list1
-        テンプレート行列の実数を格納するリスト．
-        213114
-        221333
-        113444
-    match_score 
-        合致度を計算する．0 <= return <= 1
-    max_score_proc
-        合致scoreの最大を計算する．
-    make_tri_list
-        与えられた盤面(y,x)から，(y*x)*(y*x)の状態行列を作る．
-
-    """
-    X_match = 6
-    Y_match = 3
-
-    def __init__(self):
-        self.match_list = np.full((self.Y_MAX, self.X_MAX), Puyo.EMPTY)
-    
-    match_list1 = [[20,	-170,	-60,	-170,	-170,	-10,	20,	20,	-170,	-60,	-60,	-60,	-170,	-170,	-60,	-10,	-10,	-10],
-            [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-            [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
-            [ -170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-            [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-            [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0],
-            [20,	-170,	-60,	-170,	-170,	-10,	20,	20,	-170,	-60,	-60,	-60,	-170,	-170,	-60,	-10,	-10,	-10],
-            [20,	-170,	-60,	-170,	-170,	-10,	20,	20,	-170,	-60,	-60,	-60,	-170,	-170,	-60,	-10,	-10,	-10],
-            [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-            [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
-            [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
-            [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
-            [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-            [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-            [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
-            [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0],
-            [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0],
-            [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0]]
-           
-    def match_score(self,Tem_list,tri_list):
-        score = 0
-        max_score = self.max_score_proc(self,self.match_list1)
-        for i in range(self.X_match*self.Y_match):
-            for j in range(self.X_match*self.Y_match):
-                score += Tem_list[i][j] * tri_list[i][j]
-        return score
-    
-    def max_score_proc(self,match_list1):
-        max_score = 0
-        for y in range(len(match_list1)):
-            for x in range(len(match_list1[0])):
-                max_score += abs(match_list1)
-        return max_score
-
-    def make_tri_list(self,tri_list,field):
-        """
-        Parameters
-        tri_list 
-        field 
-        引数に1pの盤面情報も必要(仮field)
-        Attributes
-        ---------
-        color そのマスが何色かを示す(0,1,2,3,4)
-        i,j そのマスに対して状態行列を作るために，どこから走査するかを記録する変数
-        """
-        color = 0
-        for y in range(self.Y_match):
-            for x in range(self.X_match):
-                """
-                [row][col]のマスから見たそれ以外のマスに対して，同色なら+1，異色なら-1，空きマスなら0を入れる
-                """
-                color = field[y][x]
-                for i in range(self.Y_match):
-                    for j in range(self.X_match):
-                        if(field[i][j] == 0):
-                            tri_list[y*3+x][i*3+j] = 0
-                            continue
-                        if(field[i][j] == color):
-                            tri_list[y*3+x][i*3+j] = 1
-                            continue
-                        if(field[i][j] != color):
-                            tri_list[y*3+x][i*3+j] = -1
-                            continue
-        return tri_list
-
-    def score_comp(self,Tem_list,tri_list,field):
-        for list in range(len(field)):
-            print(list,'score = ',self.match_score(Tem_list,self.make_tri_list(tri_list,field[list])))
-    
-    def match_proc(self,Tem_list,tri_list,field):
-        tri_list = self.make_tri_list
-        Tem_list = self.match_list1
-        return self.match_score
-
-class TriList:
-    """
-    状態行列を格納するリスト
-    Attributes
-    ----------
-    tri_list
-        状態行列の3値(+1,-1,0)を格納するリスト
-    """
-    def __init__(self):
-        self.tri_list = [[0 for j in range(6*13)]for i in range(6*13)]
-    
-    def make_tri_list(tri_list,field):
-        """
-        Parameters
-        tri_list 
-        field 
-        引数に1pの盤面情報も必要(仮field)
-        Attributes
-        ---------
-        color そのマスが何色かを示す(0,1,2,3,4)
-        i,j そのマスに対して状態行列を作るために，どこから走査するかを記録する変数
-        """
-        color = 0
-        for y in reversed(range(Field.Y_MAX)):
-            for x in range(Field.X_MAX):
-                """
-                [y][x]のマスから見たそれ以外のマスに対して，同色なら+1，異色なら-1，空きマスなら0を入れる
-                """
-                color = field[13-y][x]
-                i = y
-                j = x
-                for i in reversed(range(Field.Y_MAX)):
-                    for j in range(Field.X_MAX):
-                        if(field[y][x] == 0):
-                            tri_list[y][x] = 0
-                            continue
-                        if(field[y][x] == color):
-                            tri_list[y][x] = 1
-                            continue
-                        if(field[y][x] != color):
-                            tri_list[y][x] = -1
-                            continue
-        return tri_list
 
 def generate_moves(pos, tumo_pool):
     """
@@ -826,8 +782,8 @@ def evaluate(pos, positions_common):
         return -999999
     # Field.pretty_print(pos.field)
     # return -(positions_common.future_ojama.fixed_ojama + positions_common.future_ojama.unfixed_ojama)
-    return chain_23(pos,positions_common)
-    return MatchList.match_score(pos,Tem_list,tri_list)
+    # return chain_23(pos,positions_common)
+    return MatchList.match_proc(pos.field)
 
 def chain_23(pos,positions_common):
     
