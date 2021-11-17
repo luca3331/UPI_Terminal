@@ -1,7 +1,8 @@
-#upi.pyを基に，コンソールでぷよ盤面を確認できるようにしたデバッグ用.py
+# upi.pyを基に，コンソールでぷよ盤面を確認できるようにしたデバッグ用.py
 from enum import Enum
 import numpy as np
 import copy
+
 
 class Puyo(Enum):
     """
@@ -14,7 +15,7 @@ class Puyo(Enum):
     PURPLE = 4
     YELLOW = 5
     OJAMA = 6
-    
+
     @staticmethod
     def to_puyo(character):
         """
@@ -32,6 +33,7 @@ class Puyo(Enum):
         """
         return "ergbpyo"[int(self.value)]
 
+
 class Tumo:
     """
     操作対象となっている、上から落ちてくる、ぷよが2つくっついたもの。
@@ -42,9 +44,11 @@ class Tumo:
     child : Puyo
         子ぷよ
     """
+
     def __init__(self, c0, c1):
         self.pivot = c0
         self.child = c1
+
 
 class Rule:
     """
@@ -62,12 +66,14 @@ class Rule:
     autodroptime : int
         何も操作しなかったとき、何フレームで1マス落下するか。
     """
+
     def __init__(self):
         self.chain_time = 60
         self.next_time = 7
         self.set_time = 15
         self.fall_time = 2
         self.autodrop_time = 50
+
 
 class Move:
     """
@@ -81,6 +87,7 @@ class Move:
     is_tigiri : bool
         この着手がちぎりかどうか。軸ぷよのy座標 != 子ぷよのy座標のときはちぎりである。
     """
+
     def __init__(self, pivot_sq, child_sq, is_tigiri=False):
         self.pivot_sq = pivot_sq
         self.child_sq = child_sq
@@ -100,6 +107,7 @@ class Move:
     def none():
         return Move((0, 0), (0, 0))
 
+
 class Field:
     """
     盤面。ツモを配置する空間。
@@ -109,13 +117,13 @@ class Field:
         6行13列のPuyo配列。
     """
     X_MAX = 6
-    Y_MAX = 13    
-    
+    Y_MAX = 13
+
     # score_array = np.zeros((Y_MAX,X_MAX)) #多分自分で追加した，評価点格納用の二次元配列
 
     def __init__(self):
         self.field = np.full((self.X_MAX, self.Y_MAX), Puyo.EMPTY)
-    
+
     def init_from_pfen(self, pfen):
         """
         pfen文字列からぷよ配列を初期化する。
@@ -137,7 +145,7 @@ class Field:
 
     def set_puyo(self, x, y, col):
         self.field[x, y] = col
-    
+
     def get_puyo(self, x, y):
         return self.field[x, y]
 
@@ -153,16 +161,16 @@ class Field:
         Fieldインスタンスを色付きで見やすく標準出力に表示する。
         """
         color = ('\033[30m', '\033[31m', '\033[32m', '\033[34m', '\033[35m', '\033[33m', '\033[37m')
-        END = '\033[0m'        
+        END = '\033[0m'
         pretty_string = self.pretty()
         for p in pretty_string:
             id = "ergbpyo".find(p)
             if id >= 0:
                 print(color[id] + p + END, end='')
             else:
-                print(p, end='')                
+                print(p, end='')
         print('')
-        
+
     def pretty(self):
         """
         Fieldインスタンスを見やすい文字列に変換する。
@@ -175,7 +183,7 @@ class Field:
             if y == 12:
                 result += '------\r\n'
         return result[:-2]
-    
+
     def pretty_num(self):
         """
         Filedインスタンスを数字列に変換する．
@@ -183,22 +191,21 @@ class Field:
         result = ''
         for y in reversed(range(self.Y_MAX)):
             for x in range(self.X_MAX):
-                
-                result += str(self.get_puyo(x,y).value)
+                result += str(self.get_puyo(x, y).value)
             result += '\r\n'
             if y == 12:
                 result += '------\r\n'
         print(result)
         return result
-    
-    def make_numlist(self):#add
+
+    def make_numlist(self):  # add
         """
         fieldを数字リストとして返す．
         """
         arr = np.full((self.Y_MAX, self.X_MAX), Puyo.EMPTY)
         for y in reversed(range(self.Y_MAX)):
             for x in range(self.X_MAX):
-                arr[self.Y_MAX - 1 - y,x] = self.get_puyo(x,y).value
+                arr[self.Y_MAX - 1 - y, x] = self.get_puyo(x, y).value
         return arr
 
     def is_empty(self):
@@ -212,17 +219,17 @@ class Field:
         指定された座標にあるぷよの連結数を計算する。
         """
         if not self.is_in_field(x, y) or searched[x, y] or self.get_puyo(x, y) != puyo:
-            return 0     
+            return 0
         searched[x, y] = True
         return (self.count_connection(puyo, x - 1, y, searched) +
                 self.count_connection(puyo, x + 1, y, searched) +
                 self.count_connection(puyo, x, y - 1, searched) +
                 self.count_connection(puyo, x, y + 1, searched) + 1)
-    
+
     def calc_solo_puyo(self):
         """
 
-        """   
+        """
         searched_pos = np.zeros((self.X_MAX, self.Y_MAX), dtype=bool)
         delete_pos = np.zeros((self.X_MAX, self.Y_MAX), dtype=bool)
         colors = {}
@@ -236,7 +243,7 @@ class Field:
                     searching_pos = np.zeros((self.X_MAX, self.Y_MAX), dtype=bool)
                     count = self.count_connection(puyo, x, y, searching_pos)
                     searched_pos |= searching_pos
-                    #2段階でchain数で評価する．
+                    # 2段階でchain数で評価する．
                     if count == 2:
                         score += 5
                     if count == 3:
@@ -257,7 +264,7 @@ class Field:
                 この連鎖でのスコア。
             delete_pos : np.ndarray(bool)
                 消える場所がTrueになっているarray。
-        """   
+        """
         CHAIN_BONUS = (0, 8, 16, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512)
         CONNECT_BONUS = (0, 2, 3, 4, 5, 6, 7, 10)
         COLOR_BONUS = (0, 3, 6, 12, 24)
@@ -274,7 +281,7 @@ class Field:
                     searching_pos = np.zeros((self.X_MAX, self.Y_MAX), dtype=bool)
                     count = self.count_connection(puyo, x, y, searching_pos)
                     searched_pos |= searching_pos
-                    if count >= 4:                        
+                    if count >= 4:
                         delete_pos |= searching_pos
                         colors[puyo] = 1
                         score += CONNECT_BONUS[min(count, 11) - 4]
@@ -282,7 +289,7 @@ class Field:
             score += CHAIN_BONUS[chain_num] + COLOR_BONUS[len(colors) - 1]
             score = np.count_nonzero(delete_pos) * max(score, 1) * 10
         return score, delete_pos
-    
+
     def delete_puyo(self, delete_pos):
         """
         引数で与えられた場所を空にする。消えるぷよの上下左右1マス以内にお邪魔ぷよがあれば消す。
@@ -310,7 +317,7 @@ class Field:
                     while y < self.Y_MAX and self.get_puyo(x, y) == Puyo.EMPTY:
                         y += 1
                     if y >= self.Y_MAX:
-                        break                    
+                        break
                     self.set_puyo(x, top_y, self.get_puyo(x, y))
                     self.set_puyo(x, y, Puyo.EMPTY)
 
@@ -327,7 +334,7 @@ class Field:
         chain_num = 0
         score_sum = 0
         while True:
-            score, delete_pos = self.calc_delete_puyo(chain_num) #ここが全てzeroで通っている
+            score, delete_pos = self.calc_delete_puyo(chain_num)  # ここが全てzeroで通っている
             if score == 0:
                 # print("zero")
                 break
@@ -337,7 +344,7 @@ class Field:
                 chain_num += 1
                 score_sum += score
         if chain_num != 0:
-            print(chain_num,"連鎖")
+            print(chain_num, "連鎖")
         return (chain_num, score_sum)
 
     def is_death(self):
@@ -362,6 +369,115 @@ class Field:
                     break
         return floor_y
 
+    # class MatchList():
+    """
+    テンプレート行列に関するクラスで，Fieldクラスの継承クラス．
+    ひとまずテンプレート化する箇所は3段目までなので，6*3の容量にしてある．
+    Attributes
+    ----------
+    match_list1
+        テンプレート行列の実数を格納するリスト．
+        213
+        221333
+        11
+    match_score 
+        合致度を計算する．0 <= return <= 1
+    max_score_proc
+        合致scoreの最大を計算する．
+    make_tri_list
+        与えられた盤面(y,x)から，(y*x)*(y*x)の状態行列を作る．
+
+    """
+    X_match = 6
+    Y_match = 3
+
+    match_list1 = [
+        [320, 320, -160, -160, -160, -160, -185, -185, 320, -210, -210, -210, -185, 320, -210, -160, -160, -160],
+        [320, 320, -160, -160, -160, -160, -185, -185, 320, -210, -210, -210, -185, 320, -210, -160, -160, -160],
+        [-160, -160, 0, 0, 0, 0, -25, -25, -160, -50, -50, -50, -25, -160, -50, 0, 0, 0],
+        [-160, -160, 0, 0, 0, 0, -25, -25, -160, -50, -50, -50, -25, -160, -50, 0, 0, 0],
+        [-160, -160, 0, 0, 0, 0, -25, -25, -160, -50, -50, -50, -25, -160, -50, 0, 0, 0],
+        [-160, -160, 0, 0, 0, 0, -25, -25, -160, -50, -50, -50, -25, -160, -50, 0, 0, 0],
+        [-185, -185, -25, -25, -25, -25, 50, 50, -185, -75, -75, -75, 50, -185, -75, -25, -25, -25],
+        [-185, -185, -25, -25, -25, -25, 50, 50, -185, -75, -75, -75, 50, -185, -75, -25, -25, -25],
+        [320, 320, -160, -160, -160, -160, -185, -185, 320, -210, -210, -210, -185, 320, -210, -160, -160, -160],
+        [-210, -210, -50, -50, -50, -50, -75, -75, -210, 100, 100, 100, -75, -210, 100, -50, -50, -50],
+        [-210, -210, -50, -50, -50, -50, -75, -75, -210, 100, 100, 100, -75, -210, 100, -50, -50, -50],
+        [-210, -210, -50, -50, -50, -50, -75, -75, -210, 100, 100, 100, -75, -210, 100, -50, -50, -50],
+        [-185, -185, -25, -25, -25, -25, 50, 50, -185, -75, -75, -75, 50, -185, -75, -25, -25, -25],
+        [320, 320, -160, -160, -160, -160, -185, -185, 320, -210, -210, -210, -185, 320, -210, -160, -160, -160],
+        [-210, -210, -50, -50, -50, -50, -75, -75, -210, 100, 100, 100, -75, -210, 100, -50, -50, -50],
+        [-160, -160, 0, 0, 0, 0, -25, -25, -160, -50, -50, -50, -25, -160, -50, 0, 0, 0],
+        [-160, -160, 0, 0, 0, 0, -25, -25, -160, -50, -50, -50, -25, -160, -50, 0, 0, 0],
+        [-160, -160, 0, 0, 0, 0, -25, -25, -160, -50, -50, -50, -25, -160, -50, 0, 0, 0]]
+
+    def match_score(self, Tem_list, tri_list):
+        tmp_score = score = 0
+        # max_score = self.max_score_proc(self,self.match_list1)
+        for i in range(self.X_match * self.Y_match):
+            for j in range(self.X_match * self.Y_match):
+                tmp_score = Tem_list[i][j] * tri_list[i][j]
+                if tmp_score < 0:
+                    pass
+                score += tmp_score
+                # return 0
+        # print(score/self.max_score_proc(Tem_list))
+        print('{:.3f}'.format(score))
+        return score
+
+    def max_score_proc(self, Tem_list):
+        max_score = 0
+        for y in range(len(Tem_list)):
+            for x in range(len(Tem_list)):
+                max_score += abs(Tem_list[y][x])
+        return max_score
+
+    def make_tri_list(self):
+        """
+        Parameters
+        tri_list 
+        field 
+        引数に1pの盤面情報も必要(仮field)
+        Attributes
+        ---------
+        color そのマスが何色かを示す(0,1,2,3,4)
+        i,j そのマスに対して状態行列を作るために，どこから走査するかを記録する変数
+        """
+        tri_list = np.full((self.Y_match * self.X_match, self.Y_match * self.X_match), 0)
+        color = 0
+        for y in range(self.Y_match):
+            for x in range(self.X_match):
+                """
+                [row][col]のマスから見たそれ以外のマスに対して，同色なら+1，異色なら-1，空きマスなら0を入れる
+                """
+                color = self.field[y][x]
+                for i in range(self.Y_match):
+                    for j in range(self.X_match):
+                        if color == Puyo.EMPTY or self.field[i][j] == Puyo.EMPTY:
+                            tri_list[y + 1 * x][i + 1 * j] = 0
+                            continue
+                        # if self.field[i][j] == Puyo.EMPTY:
+                        #     tri_list[y * 3 + x][i * 3 + j] = 0
+                        #     continue
+                        if self.field[i][j] == color:
+                            tri_list[y + 1 * x][i + 1 * j] = 1
+                            continue
+                        if self.field[i][j] != color:
+                            tri_list[y + 1 * x][i + 1 * j] = -1
+                            continue
+        return tri_list
+
+    def score_comp(self, Tem_list, tri_list, field):
+        for list in range(len(field)):
+            print(list, 'score = ', self.match_score(Tem_list, self.make_tri_list(tri_list, field[list])))
+
+    def match_proc(self):
+        tri_list = self.make_tri_list()
+        Tem_list = self.match_list1
+        # print(tri_list)
+        return self.match_score(Tem_list, tri_list)
+
+
 class Position:
     """
     Fieldインスタンス、ツモ、スコア、お邪魔を管理するクラス。
@@ -378,6 +494,7 @@ class Position:
     all_clear_flag : bool
         全消しフラグ。
     """
+
     def __init__(self):
         self.field = Field()
         self.tumo_index = 0
@@ -385,7 +502,7 @@ class Position:
         self.fall_bonus = 0
         self.all_clear_flag = False
         self.rule = Rule()
-    
+
     def fall_ojama(self, positions_common):
         """
         確定予告ぷよをおじゃまぷよとして盤面に配置する。
@@ -414,7 +531,7 @@ class Position:
                 if floors[v[x]] < Field.Y_MAX:
                     self.field.set_puyo(v[x], floors[v[x]], Puyo.OJAMA)
 
-    def pre_move(self, move, positions_common):#Add
+    def pre_move(self, move, positions_common):  # Add
         """
         -追加メソッド-
         着手はするが，4連結以上が生まれても消さない
@@ -434,8 +551,7 @@ class Position:
         self.field.set_puyo(p[0], p[1], tumo.pivot)
         self.field.set_puyo(c[0], c[1], tumo.child)
         chain_num, score = self.field.chain()
-        return (chain_num,score)
-
+        return (chain_num, score)
 
     def do_move(self, move, positions_common):
         """
@@ -476,9 +592,9 @@ class Position:
 
         drop_frame = max(12 - p[1], 12 - c[1]) * rule.fall_time
         frame = (drop_frame + max(abs(2 - p[0]), abs(2 - c[0]))
-                + rule.set_time * 2 if move.is_tigiri else rule.set_time
-                + rule.chain_time * chain_num
-                + rule.next_time)
+                 + rule.set_time * 2 if move.is_tigiri else rule.set_time
+                                                            + rule.chain_time * chain_num
+                                                            + rule.next_time)
         if future_ojama.unfixed_ojama > 0:
             future_ojama.time_until_fall_ojama -= frame
             if future_ojama.time_until_fall_ojama <= 0:
@@ -487,104 +603,7 @@ class Position:
                 future_ojama.time_until_fall_ojama = frame
         if future_ojama.fixed_ojama > 0:
             self.fall_ojama(positions_common)
-    
 
-    class MatchList:
-        """
-        テンプレート行列に関するクラスで，Fieldクラスの継承クラス．
-        ひとまずテンプレート化する箇所は3段目までなので，6*3の容量にしてある．
-        Attributes
-        ----------
-        match_list1
-            テンプレート行列の実数を格納するリスト．
-            213114
-            221333
-            113444
-        match_score 
-            合致度を計算する．0 <= return <= 1
-        max_score_proc
-            合致scoreの最大を計算する．
-        make_tri_list
-            与えられた盤面(y,x)から，(y*x)*(y*x)の状態行列を作る．
-
-        """
-        X_match = 6
-        Y_match = 3
-        
-        match_list1 = [[20,	-170,	-60,	-170,	-170,	-10,	20,	20,	-170,	-60,	-60,	-60,	-170,	-170,	-60,	-10,	-10,	-10],
-                [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-                [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
-                [ -170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-                [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-                [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0],
-                [20,	-170,	-60,	-170,	-170,	-10,	20,	20,	-170,	-60,	-60,	-60,	-170,	-170,	-60,	-10,	-10,	-10],
-                [20,	-170,	-60,	-170,	-170,	-10,	20,	20,	-170,	-60,	-60,	-60,	-170,	-170,	-60,	-10,	-10,	-10],
-                [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-                [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
-                [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
-                [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
-                [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-                [-170,	320,	-210,	320,	320,	-160,	-170,	-170,	320,	-210,	-210,	-210,	320,	320,	-210,	-160,	-160,	-160],
-                [-60,	-210,	100,	-210,	-210,	-50,	-60,	-60,	-210,	100,	100,	100,	-210,	-210,	100,	-50,	-50,	-50],
-                [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0],
-                [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0],
-                [-10,	-160,	-50,	-160,	-160,	0,	-10,	-10,	-160,	-50,	-50,	-50,	-160,	-160,	-50,	0,	0,	0]]
-            
-        def match_score(self,Tem_list,tri_list):
-            score = 0
-            # max_score = self.max_score_proc(self,self.match_list1)
-            for i in range(self.X_match*self.Y_match):
-                for j in range(self.X_match*self.Y_match):
-                    score += Tem_list[i][j] * tri_list[i][j]
-            return score
-        
-        def max_score_proc(self,match_list1):
-            max_score = 0
-            for y in range(len(match_list1)):
-                for x in range(len(match_list1[0])):
-                    max_score += abs(match_list1)
-            return max_score
-
-        def make_tri_list(self):
-            """
-            Parameters
-            tri_list 
-            field 
-            引数に1pの盤面情報も必要(仮field)
-            Attributes
-            ---------
-            color そのマスが何色かを示す(0,1,2,3,4)
-            i,j そのマスに対して状態行列を作るために，どこから走査するかを記録する変数
-            """
-            tri_list = np.full((self.Y_match*self.X_match,self.Y_match*self.X_match), Puyo.EMPTY)
-            color = 0
-            for y in range(self.Y_match):
-                for x in range(self.X_match):
-                    """
-                    [row][col]のマスから見たそれ以外のマスに対して，同色なら+1，異色なら-1，空きマスなら0を入れる
-                    """
-                    color = self.field[y][x]
-                    for i in range(self.Y_match):
-                        for j in range(self.X_match):
-                            if(self.field[i][j] == 0):
-                                tri_list[y*3+x][i*3+j] = 0
-                                continue
-                            if(self.field[i][j] == color):
-                                tri_list[y*3+x][i*3+j] = 1
-                                continue
-                            if(self.field[i][j] != color):
-                                tri_list[y*3+x][i*3+j] = -1
-                                continue
-            return tri_list
-
-        def score_comp(self,Tem_list,tri_list,field):
-            for list in range(len(field)):
-                print(list,'score = ',self.match_score(Tem_list,self.make_tri_list(tri_list,field[list])))
-        
-        def match_proc(self):
-            tri_list = self.make_tri_list()
-            Tem_list = self.match_list1
-            return self.match_score(Tem_list,tri_list)
 
 class FutureOjama:
     """
@@ -598,10 +617,12 @@ class FutureOjama:
     time_until_fall_ojama : int
         未確定予告ぷよが確定予告ぷよになるまでのフレーム数。
     """
+
     def __init__(self):
         self.fixed_ojama = 0
         self.unfixed_ojama = 0
         self.time_until_fall_ojama = 0
+
 
 class PositionsCommonInfo:
     """
@@ -615,8 +636,9 @@ class PositionsCommonInfo:
     future_ojama : FutureOjama
         予告ぷよ。
     """
+
     def __init__(self):
-        self.tumo_pool = [Tumo(Puyo(i % 4 + 1), Puyo((i + 1) % 4 + 1)) for i in range(128)] # 適当に初期化
+        self.tumo_pool = [Tumo(Puyo(i % 4 + 1), Puyo((i + 1) % 4 + 1)) for i in range(128)]  # 適当に初期化
         self.rule = Rule()
         self.future_ojama = FutureOjama()
 
@@ -651,13 +673,14 @@ def generate_moves(pos, tumo_pool):
         moves.append(Move(dest, dest_side, is_tigiri))
         if tumo.pivot != tumo.child:
             moves.append(Move(dest_up, dest, False))
-            moves.append(Move(dest_side, dest, is_tigiri))      
+            moves.append(Move(dest_side, dest, is_tigiri))
     dest = (end_x, floors[end_x])
     dest_up = (end_x, floors[end_x] + 1)
     moves.append(Move(dest, dest_up, False))
     if tumo.pivot != tumo.child:
         moves.append(Move(dest_up, dest, False))
     return moves
+
 
 def get_move_range(floors):
     """
@@ -686,6 +709,7 @@ def get_move_range(floors):
             break
     return (left, right)
 
+
 def search(pos1, pos2, positions_common, depth):
     """
     この局面での最善手を探索する。
@@ -705,19 +729,20 @@ def search(pos1, pos2, positions_common, depth):
     move : Move
         探索した結果の指し手。
     """
-    
+
     if pos1.field.is_death():
         return Move.none()
     moves = generate_moves(pos1, positions_common.tumo_pool)
     score, move = search_impl(pos1, pos2, positions_common, depth)
     if move.to_upi() == Move.none().to_upi():
         return moves[0]
-    pos1.do_move(move,positions_common)
-    Field.pretty_print(pos1.field) #設置後の盤面を表す
+    pos1.do_move(move, positions_common)
+    Field.pretty_print(pos1.field)  # 設置後の盤面を表す
     # print(Field.pretty(pos1.field))
     # Field.pretty_num(pos1.field)
-    print(Field.make_numlist(pos1.field),'\n----')
+    # print(Field.make_numlist(pos1.field),'\n----')
     return move
+
 
 def search_impl(pos1, pos2, positions_common, depth):
     """
@@ -747,13 +772,13 @@ def search_impl(pos1, pos2, positions_common, depth):
     moves = generate_moves(pos1, positions_common.tumo_pool)
     best_score = -999999
     best_move = Move.none()
-    
+
     for move in moves:
         # Field.pretty_print(pos1.field)
         pos = copy.deepcopy(pos1)
         com = copy.copy(positions_common)
         com.future_ojama = copy.deepcopy(positions_common.future_ojama)
-        if pos.pre_move(move, com)[0] >= 3:#なにこれ？10/27
+        if pos.pre_move(move, com)[0] >= 3:  # なにこれ？10/27
             best_score = score
             best_move = move
             return best_score, best_move
@@ -762,6 +787,7 @@ def search_impl(pos1, pos2, positions_common, depth):
             best_score = score
             best_move = move
     return best_score, best_move
+
 
 def evaluate(pos, positions_common):
     """
@@ -783,10 +809,10 @@ def evaluate(pos, positions_common):
     # Field.pretty_print(pos.field)
     # return -(positions_common.future_ojama.fixed_ojama + positions_common.future_ojama.unfixed_ojama)
     # return chain_23(pos,positions_common)
-    return MatchList.match_proc(pos.field)
+    return Field.match_proc(pos.field)
 
-def chain_23(pos,positions_common):
-    
+
+def chain_23(pos, positions_common):
     # chain_num, _ = pos.field.chain()
     # print("chain",chain_num)
     # if chain_num >= 1:
@@ -795,22 +821,23 @@ def chain_23(pos,positions_common):
     # print(pos.field.calc_solo_puyo())
     return pos.field.calc_solo_puyo()
 
+
 class UpiPlayer:
     def __init__(self):
-        self.common_info = PositionsCommonInfo()        
+        self.common_info = PositionsCommonInfo()
         self.positions = [Position(), Position()]
 
     def upi(self):
         engine_name = "Engine_Debug"
         version = "1.0"
-        author = "Takato Kobayashi"    
+        author = "Takato Kobayashi"
         print("id name", engine_name + version)
         print("id author", author)
         print("upiok")
 
     def tumo(self, tumos):
         self.common_info.tumo_pool = [Tumo(Puyo.to_puyo(t[0]), Puyo.to_puyo(t[1])) for t in tumos]
-  
+
     def rule(self, rules):
         for i in range(0, len(rules), 2):
             if rules[i] == "falltime":
@@ -829,7 +856,7 @@ class UpiPlayer:
 
     def position(self, pfen):
         for i in range(2):
-            self.positions[i].field.init_from_pfen(pfen[i * 2])            
+            self.positions[i].field.init_from_pfen(pfen[i * 2])
             self.positions[i].tumo_index = int(pfen[i * 2 + 1])
         self.common_info.future_ojama.fixed_ojama = int(pfen[4])
         self.common_info.future_ojama.unfixed_ojama = int(pfen[5])
@@ -843,39 +870,40 @@ class UpiPlayer:
         # 特に何もしない
         pass
 
+
 if __name__ == "__main__":
     token = ""
     upi = UpiPlayer()
     while token != "quit":
         cmd = input().split(' ')
         token = cmd[0]
-                
+
         # UPIエンジンとして認識されるために必要なコマンド
         if token == "upi":
             upi.upi()
 
         # 今回のゲームで使うツモ128個
-        elif token == "tumo":         
-            upi.tumo(cmd[1:]) 
+        elif token == "tumo":
+            upi.tumo(cmd[1:])
 
-        # ルール
-        elif token == "rule": 
-            upi.rule(cmd[1:]) 
+            # ルール
+        elif token == "rule":
+            upi.rule(cmd[1:])
 
-        # 時間のかかる前処理はここで。
-        elif token == "isready": 
-            upi.isready() 
+            # 時間のかかる前処理はここで。
+        elif token == "isready":
+            upi.isready()
 
-        # 思考開始する局面を作る。
-        elif token == "position": 
-            upi.position(cmd[1:]) 
+            # 思考開始する局面を作る。
+        elif token == "position":
+            upi.position(cmd[1:])
 
-        # 思考開始の合図。エンジンはこれを受信すると思考を開始。
-        elif token == "go": 
-            upi.go() 
+            # 思考開始の合図。エンジンはこれを受信すると思考を開始。
+        elif token == "go":
+            upi.go()
 
-        # ゲーム終了時に送ってくるコマンド
-        elif token == "gameover": 
+            # ゲーム終了時に送ってくるコマンド
+        elif token == "gameover":
             upi.gameover()
 
         # 有効なコマンドではない。
