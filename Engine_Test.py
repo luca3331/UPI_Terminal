@@ -216,7 +216,7 @@ class Field:
                         score += 5
                     if count == 3:
                         score += 50
-        print(score)
+        # print(score)
         return score
 
     def calc_delete_puyo(self, chain_num):
@@ -311,7 +311,7 @@ class Field:
                 self.slide()
                 chain_num += 1
                 score_sum += score
-        if chain_num != 0:
+        # if chain_num != 0:
             print(chain_num,"連鎖")
         return (chain_num, score_sum)
 
@@ -580,7 +580,7 @@ def search(pos1, pos2, positions_common, depth):
     if move.to_upi() == Move.none().to_upi():
         return moves[0]
     pos1.do_move(move,positions_common)
-    Field.pretty_print(pos1.field) #設置後の盤面を表す
+    # Field.pretty_print(pos1.field) #設置後の盤面を表す
     return move
 
 def search_impl(pos1, pos2, positions_common, depth):
