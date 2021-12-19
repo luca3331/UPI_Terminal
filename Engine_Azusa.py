@@ -1,4 +1,3 @@
-# upi.pyを基に，コンソールでぷよ盤面を確認できるようにしたデバッグ用.py
 from enum import Enum
 import numpy as np
 import copy
@@ -118,8 +117,6 @@ class Field:
     """
     X_MAX = 6
     Y_MAX = 13
-
-    # score_array = np.zeros((Y_MAX,X_MAX)) #多分自分で追加した，評価点格納用の二次元配列
 
     def __init__(self):
         self.field = np.full((self.X_MAX, self.Y_MAX), Puyo.EMPTY)
@@ -389,40 +386,44 @@ class Field:
 
     """
     X_match = 6
-    Y_match = 3
+    Y_match = 4
+    size_def = X_match*Y_match
+    def_arr = [2, 2, 0, 0, 4, 4, 1, 1, 2, 3, 3, 3, 1, 2, 3, 0, 0, 4, 4, 4, 0, 0, 0, 0]
+    Temp_arr = np.full((size_def, size_def), -1)
+    Temp_score = [0, 320, 200, 100, 50]
+    arr_score_added = [-1] * 24
 
-    match_list1 = [[50, -75, -185, -185, -185, 50, -75, -185, 50, -75, -75, -75, -185, 50, -185, 50, 50, 50],
-                   [-75, 100, -210, -210, -210, -75, 100, -210, -75, 100, 100, 100, -210, -75, -210, -75, -75, -75],
-                   [-185, -210, 320, 320, 320, -185, -210, 320, -185, -210, -210, -210, 320, -185, 320, -185, -185,
-                    -185],
-                   [-185, -210, 320, 320, 320, -185, -210, 320, -185, -210, -210, -210, 320, -185, 320, -185, -185,
-                    -185],
-                   [-185, -210, 320, 320, 320, -185, -210, 320, -185, -210, -210, -210, 320, -185, 320, -185, -185,
-                    -185],
-                   [50, -75, -185, -185, -185, 50, -75, -185, 50, -75, -75, -75, -185, 50, -185, 50, 50, 50],
-                   [-75, 100, -210, -210, -210, -75, 100, -210, -75, 100, 100, 100, -210, -75, -210, -75, -75, -75],
-                   [-185, -210, 320, 320, 320, -185, -210, 320, -185, -210, -210, -210, 320, -185, 320, -185, -185,
-                    -185],
-                   [50, -75, -185, -185, -185, 50, -75, -185, 50, -75, -75, -75, -185, 50, -185, 50, 50, 50],
-                   [-75, 100, -210, -210, -210, -75, 100, -210, -75, 100, 100, 100, -210, -75, -210, -75, -75, -75],
-                   [-75, 100, -210, -210, -210, -75, 100, -210, -75, 100, 100, 100, -210, -75, -210, -75, -75, -75],
-                   [-75, 100, -210, -210, -210, -75, 100, -210, -75, 100, 100, 100, -210, -75, -210, -75, -75, -75],
-                   [-185, -210, 320, 320, 320, -185, -210, 320, -185, -210, -210, -210, 320, -185, 320, -185, -185,
-                    -185],
-                   [50, -75, -185, -185, -185, 50, -75, -185, 50, -75, -75, -75, -185, 50, -185, 50, 50, 50],
-                   [-185, -210, 320, 320, 320, -185, -210, 320, -185, -210, -210, -210, 320, -185, 320, -185, -185,
-                    -185],
-                   [50, -75, -185, -185, -185, 50, -75, -185, 50, -75, -75, -75, -185, 50, -185, 50, 50, 50],
-                   [50, -75, -185, -185, -185, 50, -75, -185, 50, -75, -75, -75, -185, 50, -185, 50, 50, 50],
-                   [50, -75, -185, -185, -185, 50, -75, -185, 50, -75, -75, -75, -185, 50, -185, 50, 50, 50]]
+    for lp1 in range(size_def):
+        arr_score_added[lp1] = Temp_score[def_arr[lp1]]
 
-    def match_score(self, Tem_list, tri_list):
+    for lp1 in range(size_def):
+        for lp2 in range(size_def):
+            if (def_arr[lp1] == 0) or def_arr[lp2] == 0:
+                Temp_arr[lp1][lp2] = 0
+                continue
+            if def_arr[lp1] == def_arr[lp2]:
+                Temp_arr[lp1][lp2] = 1
+                continue
+            if def_arr[lp1] != def_arr[lp2]:
+                Temp_arr[lp1][lp2] = -1
+                continue
+
+    for lp1 in range(size_def):
+        for lp2 in range(size_def):
+            if def_arr[lp1] == def_arr[lp2]:
+                Temp_arr[lp1][lp2] = (arr_score_added[lp1] + arr_score_added[lp2]) / 2
+                continue
+            if def_arr[lp1] != def_arr[lp2]:
+                Temp_arr[lp1][lp2] = (arr_score_added[lp1] + arr_score_added[lp2]) / 2 * -1
+                continue
+
+    def match_score(self, temp_arr, tri_list):
         score = 0
         # max_score = self.max_score_proc(self,self.match_list1)
         for i in range(self.X_match * self.Y_match):
             for j in range(self.X_match * self.Y_match):
-                score += Tem_list[i][j] * tri_list[i][j]
-                if Tem_list[i][j] * tri_list[i][j] < 0:
+                score += temp_arr[i][j] * tri_list[i][j]
+                if temp_arr[i][j] * tri_list[i][j] < 0:
                     score -= 1000
                 # if tmp_score < 0:
                 #     pass
@@ -481,9 +482,9 @@ class Field:
 
     def match_proc(self):
         tri_list = self.make_tri_list()
-        Tem_list = self.match_list1
+        tem_list = self.Temp_arr
         # print(tri_list)
-        return self.match_score(Tem_list, tri_list)
+        return self.match_score(tem_list, tri_list)
 
 
 class Position:
@@ -837,7 +838,7 @@ class UpiPlayer:
         self.positions = [Position(), Position()]
 
     def upi(self):
-        engine_name = "Engine_Debug"
+        engine_name = "Engine_Azusa"
         version = "1.0"
         author = "Takato Kobayashi"
         print("id name", engine_name + version)
