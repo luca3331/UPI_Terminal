@@ -1,0 +1,9 @@
+Azusa
+
+Bridget
+
+Cate
+・関連性行列関係の処理のメソッド分け
+Dolly
+・scoreの正規化
+・正規化scoreによる手順選択の見直し

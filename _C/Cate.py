@@ -341,22 +341,18 @@ class Field:
         return floor_y
 
     def floors_bounds_bool(self):
+        """
+        配置したぷよの高さが6以上であれば真，以外は偽
+        :return: Bool
+        """
         if np.amax(self.floors()) > 5:
             return True
         else:
             return False
 
-    # class MatchList():
     """
-    テンプレート行列に関するクラスで，Fieldクラスの継承クラス．
     Attributes
     ----------
-    match_list1
-        テンプレート行列の実数を格納するリスト．
-        555555
-        123044
-        112333
-        220044
     match_score 
         合致度を計算する．0 <= return <= 1
     max_score_proc
@@ -368,39 +364,138 @@ class Field:
     X_match = 6
     Y_match = 4
     size_def = X_match * Y_match
-    def_arr = [[2, 2, 0, 0, 4, 4, 1, 1, 2, 3, 3, 3, 1, 2, 3, 0, 4, 4, 5, 5, 5, 5, 5, 5]
-               ,[2, 2, 0, 0, 4, 4, 1, 1, 2, 3, 3, 3, 1, 2, 3, 0, 4, 4, 4, 4, 4, 4, 4, 4]
-               ,[2, 2, 0, 0, 4, 4, 1, 1, 2, 3, 3, 3, 1, 2, 3, 0, 4, 4, 5, 5, 5, 5, 5, 5]]
-    prefer_arr = def_arr[2]
-    Temp_arr = np.full((size_def, size_def), -1)
-    Temp_score = [0, 320, 200, 100, 50, -1000]
-    arr_score_added = [-1] * 24
+    temp_arr = np.full((size_def, size_def), -1)
+    temp_score = [0, 320, 200, 100, 50, -1000]
+    h_tier = 2
+    t_tier = 1
 
-    for lp1 in range(size_def):
-        arr_score_added[lp1] = Temp_score[def_arr[1][lp1]]
+    def arr_1_to_4(self):
+        """
+        1*24のテンプレートリストから，4*6のテンプレート行列を作成する
+        :return: 4*6のテンプレート行列
+        """
+        size_def = self.size_def
+        def_arr = self.head_tale_merge()
+        temp_arr = np.full((size_def, size_def), -1)
+        for lp1 in range(size_def):  # 1*24の色格納リストから，4*6の状態行列を作成している？
+            for lp2 in range(size_def):
+                if def_arr[lp1] == 0 or def_arr[lp2] == 0:
+                    temp_arr[lp1][lp2] = 0
+                    continue
+                if def_arr[lp1] == def_arr[lp2]:
+                    temp_arr[lp1][lp2] = 1
+                    continue
+                if def_arr[lp1] != def_arr[lp2]:
+                    temp_arr[lp1][lp2] = -1
+                    continue
+        return temp_arr
 
-    for lp1 in range(size_def):
-        for lp2 in range(size_def):
-            if (prefer_arr[lp1] == 0) or prefer_arr[lp2] == 0:
-                Temp_arr[lp1][lp2] = 0
-                continue
-            if prefer_arr[lp1] == prefer_arr[lp2]:
-                Temp_arr[lp1][lp2] = 1
-                continue
-            if prefer_arr[lp1] != prefer_arr[lp2]:
-                Temp_arr[lp1][lp2] = -1
-                continue
+    def arr_score_add(self):
+        """
+        1*24のテンプレート行列にスコアを付与する
+        :return: 値渡しなのでなし
+        """
 
-    for lp1 in range(size_def):
-        for lp2 in range(size_def):
-            if def_arr[1][lp1] == def_arr[1][lp2]:
-                Temp_arr[lp1][lp2] = (arr_score_added[lp1] + arr_score_added[lp2]) / 2
-                continue
-            if def_arr[1][lp1] != def_arr[1][lp2]:
-                Temp_arr[lp1][lp2] = (arr_score_added[lp1] + arr_score_added[lp2]) / 2 * -1
-                continue
+    def tri_temp_comp(self):
+        """
+        状態行列とテンプレート行列を比較し，評価値を計算するための表を作成する
+        :return: なし
+        """
+        size_def = self.size_def
+        def_arr = self.head_tale_merge()
+        temp_arr = self.arr_1_to_4()
+        arr_score_added = [-1] * 24
+        temp_score = [0, 320, 200, 100, 50, -1000]
+
+        for lp1 in range(self.size_def):
+            arr_score_added[lp1] = self.temp_score[def_arr[lp1]]
+
+        for lp1 in range(size_def):  # 状態行列にスコア付をしている
+            for lp2 in range(size_def):
+                if def_arr[lp1] == def_arr[lp2]:
+                    temp_arr[lp1][lp2] = (arr_score_added[lp1] + arr_score_added[lp2]) / 2
+                    continue
+                if def_arr[lp1] != def_arr[lp2]:
+                    temp_arr[lp1][lp2] = (arr_score_added[lp1] + arr_score_added[lp2]) / 2 * -1
+                    continue
+
+        return temp_arr
+
+    def match_score_head(self, tier):  # 土台の折り返し部分　左から3列
+        """
+        土台の折り返し部分を登録しておく
+        def_lib:定石を登録しておくライブラリ
+        def_arr_tX:優先順位を表すtier
+
+        """
+        def_lib = [[2, 2, 0, 1, 1, 2, 1, 2, 3, 4, 4, 0],
+                   [2, 2, 0, 1, 1, 2, 1, 2, 3, 4, 4, 4],
+                   [2, 2, 3, 1, 1, 2, 1, 2, 3, 4, 4, 0],
+                   [2, 2, 3, 1, 1, 2, 1, 2, 3, 4, 4, 4]]
+
+        def_arr_tier = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+        for lp in range(len(def_lib)):
+            def_arr_tier.append(def_lib[lp])
+        # def_arr_t1 = def_lib[0]
+        # def_arr_t2 = def_lib[2]
+        # # def_arr_t3 = def_lib[0]
+        # # def_arr_t4 = def_lib[1]
+
+        return def_arr_tier[tier]
+
+    def match_score_tale(self, tier):  # 土台の連鎖尾部分　右から3列
+        """
+        土台の連鎖尾部分を登録しておく
+        def_lib:定石を登録しておくライブラリ
+        def_arr_tX:優先順位を表すtier
+
+        """
+        def_lib_j3 = [[0, 2, 2, 3, 3, 3, 0, 2, 2, 0, 0, 0],
+                      [2, 2, 2, 3, 3, 3, 0, 2, 2, 0, 0, 0]]
+        def_lib_j2 = [[0, 2, 2, 3, 3, 2, 0, 2, 0, 0, 0, 0],
+                      [2, 2, 0, 3, 3, 0, 2, 2, 0, 0, 0, 0]]
+        def_lib_type1 = [[1, 1, 2, 3, 3, 2, 2, 2, 1, 0, 0, 1],
+                         [1, 1, 2, 3, 3, 1, 2, 1, 2, 0, 2, 0],
+                         [1, 1, 2, 3, 3, 2, 0, 2, 1, 0, 2, 1],
+                         [1, 1, 4, 3, 3, 2, 1, 4, 2, 2, 2, 4]]
+        def_lib_type2 = [[3, 4, 3, 3, 4, 4, 4, 2, 3, 2, 3, 3],
+                         [3, 4, 3, 3, 4, 4, 4, 3, 3, 0, 0, 3],
+                         [3, 4, 3, 3, 4, 4, 4, 3, 3, 0, 3, 0],
+                         [3, 4, 4, 3, 4, 1, 4, 1, 1, 1, 0, 0],
+                         [3, 2, 1, 3, 4, 4, 4, 2, 1, 4, 1, 1],
+                         [3, 4, 1, 3, 4, 1, 4, 0, 1, 4, 1, 0], ]
+
+        # def_arr_t1 = def_lib_j3[0]
+        def_arr_t2 = def_lib_j3[1]
+        def_arr_t1 = def_lib_type2[5]
+
+        return def_arr_t1
+
+    def head_tale_merge(self):
+        """
+        折り返し部分と連鎖尾部分のリストを連結する
+        :return: 連結した1*24のリスト
+        """
+        head_arr = self.match_score_head(self.h_tier)
+        tale_arr = self.match_score_tale(self.t_tier)
+        arr = []
+
+        for num in range(2, len(head_arr), 3):
+            arr.append(head_arr[num - 2])
+            arr.append(head_arr[num - 1])
+            arr.append(head_arr[num])
+            arr.append(tale_arr[num - 2])
+            arr.append(tale_arr[num - 1])
+            arr.append(tale_arr[num])
+
+        return arr
 
     def match_score(self, temp_arr, tri_list):
+        """
+        :param temp_arr: テンプレート行列
+        :param tri_list: 状態行列
+        :return:その着手の点数
+        """
         score = 0
         # max_score = self.max_score_proc()
         for i in range(self.X_match * self.Y_match):
@@ -408,10 +503,13 @@ class Field:
                 score += temp_arr[i][j] * tri_list[i][j]
                 if temp_arr[i][j] * tri_list[i][j] < 0:
                     score -= 1000000
-        print('{:.3f}'.format(score))
         return score
 
     def max_score_proc(self):
+        """
+        スコアを割合表示するために評価値の最大を計算する
+        :return: 最大値
+        """
         max_score = 0
         for lp1 in range(self.size_def):
             for lp2 in range(self.size_def):
@@ -453,14 +551,37 @@ class Field:
                             pass
         return tri_list
 
-    def score_comp(self, Tem_list, tri_list, field):
-        for list in range(len(field)):
-            print(list, 'score = ', self.match_score(Tem_list, self.make_tri_list(tri_list, field[list])))
-
     def match_proc(self):
+        """
+        関連性行列を用いて評価値を計算するmain文
+        :return: 評価値
+        """
+
         tri_list = self.make_tri_list()
-        tem_list = self.Temp_arr
+        self.head_tale_merge()
+        tem_list = self.arr_1_to_4()
         return self.match_score(tem_list, tri_list)
+
+    def Cate_proc(self):
+        """
+        tierを表現するためにmatch_procを作り直す
+        :argument
+         h_tier:折り返し部分のtier現在のtier数を表す．初期は1
+         t_tier:連鎖尾部分のtier現在のtier数を表す．初期は1
+        :return: 評価値
+        """
+
+
+        tri_list = self.make_tri_list()
+        self.head_tale_merge()
+        tem_list = self.tri_temp_comp()
+        score = self.match_score(tem_list, tri_list)
+        print('{:.3f} '.format(score) + '{0} {1}'.format(self.h_tier, self.t_tier))
+        return score
+
+    def tier_charnge(self):
+        self.t_tier += 1
+        return self.Cate_proc()
 
 
 class Position:
@@ -726,8 +847,8 @@ def search(pos1, pos2, positions_common, depth):
 
     if move == Move.none():
         return False
-    if pos1.field.floors_bounds_bool(): # 範囲外に置くと強制終了する
-        sys.exit()
+    # if pos1.field.floors_bounds_bool():  # 範囲外に置くと強制終了する
+    #     sys.exit()
     return move
 
 
@@ -752,9 +873,9 @@ def search_impl(pos1, pos2, positions_common, depth):
     best_move : Move
         best_scoreを得ることができる指し手。
     """
-    if depth != 0:
-        if search_impl(copy.deepcopy(pos1), pos2, copy.copy(positions_common), 0)[0] < 0:
-            return 0, Move.none()
+    # if depth != 0:
+    #     if search_impl(copy.deepcopy(pos1), pos2, copy.copy(positions_common), 0)[0] < 0:
+    #         return 0, Move.none()
     if depth == 0:
         return evaluate(pos1, positions_common), Move.none()
     if pos1.field.is_death():
@@ -767,7 +888,7 @@ def search_impl(pos1, pos2, positions_common, depth):
         pos = copy.deepcopy(pos1)
         com = copy.copy(positions_common)
         com.future_ojama = copy.deepcopy(positions_common.future_ojama)
-        # if pos.pre_move(move, com)[0] >= 3:  # なにこれ？10/27
+        # if pos.pre_move(move, com)[0] >= 3:  # 3連鎖を見つけたら探索を打ち切って発火
         #     best_score = score
         #     best_move = move
         #     return best_score, best_move
@@ -776,6 +897,10 @@ def search_impl(pos1, pos2, positions_common, depth):
         if score > best_score:
             best_score = score
             best_move = move
+    while best_score < 0 and Field.t_tier < 6:
+        Field.t_tier += 1
+        score, _ = search_impl(pos, pos2, com, 1)
+
     return best_score, best_move
 
 
@@ -796,7 +921,9 @@ def evaluate(pos, positions_common):
     """
     if pos.field.is_death():
         return -999999
-    return Field.match_proc(pos.field)
+    # return Field.match_proc(pos.field)
+    return Field.Cate_proc(pos.field)
+
 
 class UpiPlayer:
     def __init__(self):
@@ -804,7 +931,7 @@ class UpiPlayer:
         self.positions = [Position(), Position()]
 
     def upi(self):
-        engine_name = "Bridget"
+        engine_name = "Cate"
         version = "1.0"
         author = "Takato Kobayashi"
         print("id name", engine_name + version)
@@ -868,7 +995,7 @@ if __name__ == "__main__":
         # elif token == "rule":
         #     upi.rule(cmd[1:])
 
-            # 時間のかかる前処理はここで。
+        # 時間のかかる前処理はここで。
         elif token == "isready":
             upi.isready()
 
@@ -876,7 +1003,7 @@ if __name__ == "__main__":
         # elif token == "position":
         #     upi.position(cmd[1:])
 
-            # 思考開始の合図。エンジンはこれを受信すると思考を開始。
+        # 思考開始の合図。エンジンはこれを受信すると思考を開始。
         elif token == "go":
             upi.go()
 
