@@ -7,3 +7,5 @@ Cate
 Dolly
 ・scoreの正規化
 ・正規化scoreによる手順選択の見直し
+Emily
+・木構造の実装
