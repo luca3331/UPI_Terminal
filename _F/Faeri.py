@@ -636,10 +636,10 @@ class Field:
         tem_list = self.tri_temp_comp()
         score = self.match_score(tem_list, tri_list)
         max_score = self.max_score_proc()
-        print('{:.3f} '.format(score / max_score) + '{0} {1}'.format(self.h_tier, self.t_tier))
+        # print('{:.3f} '.format(score / max_score) + '{0} {1}'.format(self.h_tier, self.t_tier))
         return score
 
-    def tier_charnge(self):
+    def tier_change(self):
         self.t_tier += 1
         return self.Cate_proc()
 
@@ -903,7 +903,7 @@ def search(pos1, pos2, positions_common, depth):
     if move.to_upi() == Move.none().to_upi():
         return moves[0]
     pos1.do_move(move, positions_common)
-    Field.pretty_print(pos1.field)  # 設置後の盤面を表す
+    # Field.pretty_print(pos1.field)  # 設置後の盤面を表す
 
     if move == Move.none():
         return False
@@ -1015,7 +1015,7 @@ class UpiPlayer:
                 self.common_info.rule.autodrop_time = int(rules[i + 1])
 
     def isready(self):
-        print("readyok")
+        self.tumo_read()
 
     def position(self, pfen):
         for i in range(2):
@@ -1028,18 +1028,41 @@ class UpiPlayer:
     def go(self):
         move = search(self.positions[0], self.positions[1], self.common_info, 1)
 
-        print('bestmove', move.to_upi())
+        # print('bestmove', move.to_upi())
 
     def gameover(self):
         # 特に何もしない
         sys.exit()
         pass
 
+    def tumo_edit(self, text):
+        out_list = [' '] * 64
+        for lp in range(0, 128, 2):
+            out_list.insert(lp + 1, text[lp:lp + 2])
+        out_txt = ''.join(out_list)
+        return out_txt
+
+    def tumo_read(self):
+        size = 128
+        tumo_tmp = [''] * 65536
+        tumo = [''] * 65536
+        flread = open('haipuyo.txt', 'r')
+        count_inner = 0
+        for line in flread:
+            tumo_tmp[count_inner] = line + "\n"
+            tumo[count_inner] = 'tumo' + self.tumo_edit(tumo_tmp[count_inner])
+            count_inner += 1
+
+        return tumo
+
 
 if __name__ == "__main__":
-    count = 0
+    tumo_index_count = 0
+    count = 1
     token = "go"
     upi = UpiPlayer()
+    tumos = upi.tumo_read()
+
     while token != "quit":
         # cmd = input().split(' ')
         # token = cmd[0]
@@ -1048,8 +1071,17 @@ if __name__ == "__main__":
         if token == "upi":
             upi.upi()
 
+        elif token == "next":
+            upi.__init__()
+            cmd = tumos[tumo_index_count].split(' ')
+            upi.tumo(cmd[1:])
+            count = 1
+            tumo_index_count += 1
+            token = "go"
+
+
         # 今回のゲームで使うツモ128個
-        # elif token == "tumo":
+        # if token == "tumo":
         #     upi.tumo(cmd[1:])
         #
         #     # ルール
@@ -1068,10 +1100,14 @@ if __name__ == "__main__":
         elif token == "go":
             count += 1
             turn = 10
-            if count > turn:
-                print(turn, "ターン経過したので処理を打ち切ります")
-                exit()
             upi.go()
+            if count > turn:
+                Field.pretty_print(upi.positions[0].field)
+                print(turn, "ターン経過..", "ツモ番号", tumo_index_count, "での連鎖構築を終了します")
+                token = "next"
+            if tumo_index_count > 100:
+                print("ツモ番号 ", tumo_index_count, "終了します．\n")
+                exit()
 
             # ゲーム終了時に送ってくるコマンド
         elif token == "gameover":
