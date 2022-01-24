@@ -110,13 +110,29 @@ class Move:
 
 class Tree:
     """
-    nX:子ノードへのポインタ
-    data:合致度
-    tri_arr:状態行列
-
+    関連性行列による定形配置法に木構造を利用した処理
+    1/24現在はdepth = 2にしか対応していない．Tree()の宣言部分をdepthによって動的に処理出来たら多分いける
+    ----------階層関係-------------
+    tree_proc(self, pos1, positions_common, depth):
+        tree_search_impl(self, move, depth, pos1, root_count, positions_common)
+            plt_proc(self, pos1)
+        tree_score_calc(self)
     """
-
     def __init__(self):
+        """
+            move: このノードの着手
+            total_score:未使用
+            ave_score:未使用
+            score:合致度
+            tri_list:このノードの状態行列(1/24 未確認)
+            nX:子ノードのインスタンス
+        """
+
+        self.move = Move.none()
+        self.total_score = -1
+        self.ave_score = -1
+        self.score = -1
+        self.tri_list = np.full((24, 24), -1)
         self.n1 = None
         self.n2 = None
         self.n3 = None
@@ -139,42 +155,111 @@ class Tree:
         self.n20 = None
         self.n21 = None
         self.n22 = None
-        self.move = None
-        self.score = -1
-        self.tri_list = np.full((Field.size_def, Field.size_def), -1)
 
-    def tree_proc(self, move, depth, pos):
-        if depth != 0:
-            self.n1 = Tree()
-            self.n2 = Tree()
-            self.n3 = Tree()
-            self.n4 = Tree()
-            self.n5 = Tree()
-            self.n6 = Tree()
-            self.n7 = Tree()
-            self.n8 = Tree()
-            self.n9 = Tree()
-            self.n10 = Tree()
-            self.n11 = Tree()
-            self.n12 = Tree()
-            self.n13 = Tree()
-            self.n14 = Tree()
-            self.n15 = Tree()
-            self.n16 = Tree()
-            self.n17 = Tree()
-            self.n18 = Tree()
-            self.n19 = Tree()
-            self.n20 = Tree()
-            self.n21 = Tree()
-            self.n22 = Tree()
-            self.move = move
+    def init_child_node(self):
+        """
+        rootの子ノードの宣言
+        """
+        for num in range(1, 23):
+            name = 'n' + str(num)
+            setattr(self, name, Tree())
+            ob = getattr(self, name)
+            ob.move = Move.none()
+            ob.score = -1
+            ob.total_score = -1
+            ob.ave_score = -1
+            ob.tri_list = np.full((24, 24), -1)
+            ob.init_grand_chile_node()
 
-        tri_list = Field.make_tri_list(pos)
-        Field.pretty_print(pos)
-        Field.head_tale_merge(pos)
-        tem_list = Field.tri_temp_comp(pos)
-        self.score = Field.match_score(pos, tem_list, tri_list) / Field.max_score_proc(pos)
-        print('{:.3f}'.format(self.score), 'move', move.to_upi())
+    def init_grand_chile_node(self):
+        """
+        rootの孫ノードの宣言
+        """
+        for num in range(1, 23):
+            name = 'n' + str(num)
+            setattr(self, name, Tree())
+            ob = getattr(self, name)
+            ob.move = Move.none()
+            ob.score = -1
+            ob.total_score = -1
+            ob.ave_score = -1
+            ob.tri_list = np.full((24, 24), -1)
+
+    def tree_search_impl(self, move, depth, pos1, root_count, positions_common):
+        """
+        tree_procの内部関数
+        盤面を受け取って，現在から見て2手先までの全ての局面の状態行列を作成し，評価値を計算する．
+        setattr(object, name, value),getattr(object, name)は動的にインスタンスを管理できる暗黒魔術
+        """
+        if pos1.field.is_death():
+            return -999999, Move.none()
+        moves = generate_moves(pos1, positions_common.tumo_pool)
+
+        depth -= 1
+        for ct, move in enumerate(moves):
+            if depth == 0:
+                pos = copy.deepcopy(pos1)
+                com = copy.copy(positions_common)
+                com.future_ojama = copy.deepcopy(positions_common.future_ojama)
+                pos.pre_move(move, com)
+                # Field.pretty_print(pos.field)
+                score, tri_list = self.plt_proc(pos)
+                pr_name = 'n' + str(root_count + 1)
+                myname = 'n' + str(ct + 1)
+                pr_object = getattr(self, pr_name)
+                my_object = getattr(pr_object, myname)
+                pr_score = self.score
+                setattr(my_object, "score", score)
+                setattr(my_object, "move", move)
+                setattr(my_object, "tri_list", tri_list)
+                setattr(my_object, "total_score", score + pr_score)
+            if depth == 1:
+                pos = copy.deepcopy(pos1)
+                com = copy.copy(positions_common)
+                com.future_ojama = copy.deepcopy(positions_common.future_ojama)
+                pos.pre_move(move, com)
+                score, tri_list = self.plt_proc(pos)
+                ob1 = getattr(self, 'n' + str(ct + 1))
+                setattr(ob1, "score", score)
+                setattr(ob1, "move", move)
+                setattr(ob1, "tri_list", tri_list)
+                self.tree_search_impl(move, depth, pos, ct, positions_common)
+
+    def tree_proc(self, pos1, positions_common, depth):
+        """
+        状態行列を計算する諸処理
+        """
+        Field.head_tale_merge(pos1.field)
+        self.tree_search_impl(None, depth, pos1, None, positions_common)
+        return self.tree_score_calc()
+
+    def tree_score_calc(self):
+        """
+        木構造の中から最も評価値の高いノードの1手目の評価値と着手を計算する
+        計算の方法は様々考えられるが，1/24現在は葉ノードが最高となる親ノードを計算している
+        """
+        best_score = -9999
+        best_move = Move.none()
+        for ch in range(1, 23):
+            for gch in range(1, 23):
+                g2_object = getattr(self, "n" + str(ch))
+                g1_object = getattr(g2_object, "n" + str(gch))
+                move = getattr(g2_object, "move")
+                score = getattr(g2_object, "score")
+                if score > best_score:
+                    best_score = score
+                    best_move = move
+
+        return best_score, best_move
+
+    def plt_proc(self, pos1):
+        """
+        盤面を受け取って，状態行列と評価値を計算する
+        """
+        tri_list = Field.make_tri_list(pos1.field)
+        tem_list = Field.tri_temp_comp(pos1.field)
+        score = Field.match_score(pos1.field, tem_list, tri_list) / Field.max_score_proc(pos1.field)
+        return score, tri_list
 
 
 class Field:
@@ -946,7 +1031,8 @@ def search(pos1, pos2, positions_common, depth):
     if pos1.field.is_death():
         return Move.none()
     moves = generate_moves(pos1, positions_common.tumo_pool)
-    score, move = search_impl(pos1, pos2, positions_common, depth)
+    # score, move = search_impl(pos1, pos2, positions_common, depth)
+    score, move = tree_root(pos1, positions_common, depth)
     if move.to_upi() == Move.none().to_upi():
         return moves[0]
     pos1.do_move(move, positions_common)
@@ -957,6 +1043,13 @@ def search(pos1, pos2, positions_common, depth):
     # if pos1.field.floors_bounds_bool():  # 範囲外に置くと強制終了する
     #     sys.exit()
     return move
+
+
+def tree_root(pos1, positions_common, depth):
+    root = Tree()
+    root.init_child_node()
+    best_score, best_move = Tree.tree_proc(root, pos1, positions_common, depth)
+    return best_score, best_move
 
 
 def search_impl(pos1, pos2, positions_common, depth):

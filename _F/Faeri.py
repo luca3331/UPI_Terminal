@@ -370,32 +370,6 @@ class Field:
     h_tier = 1
     t_tier = 1
 
-    class Tree:
-        def __init__(self, data):
-            self.n1 = None
-            self.n2 = None
-            self.n3 = None
-            self.n4 = None
-            self.n5 = None
-            self.n6 = None
-            self.n7 = None
-            self.n8 = None
-            self.n9 = None
-            self.n10 = None
-            self.n11 = None
-            self.n12 = None
-            self.n13 = None
-            self.n14 = None
-            self.n15 = None
-            self.n16 = None
-            self.n17 = None
-            self.n18 = None
-            self.n19 = None
-            self.n20 = None
-            self.n21 = None
-            self.n22 = None
-            self.data = data
-
     def arr_1_to_4(self):
         """
         1*24のテンプレートリストから，4*6のテンプレート行列を作成する
