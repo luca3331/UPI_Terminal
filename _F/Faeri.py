@@ -547,7 +547,6 @@ class Field:
         else:
             return False
 
-
     def make_tri_list(self):
         """
         Parameters
@@ -1052,7 +1051,6 @@ if __name__ == "__main__":
             count = 1
             tumo_index_count += 1
             token = "go"
-
 
         # 今回のゲームで使うツモ128個
         # if token == "tumo":
