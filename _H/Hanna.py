@@ -2,7 +2,7 @@ import sys
 from enum import Enum
 import numpy as np
 import copy
-
+import random
 
 
 class Puyo(Enum):
@@ -338,6 +338,12 @@ class Data:
         asc = Data.asc_mtx[tier]
         asc_score = Data.asc_mtx_score[tier]
         return arr, bias, taboo, asc, asc_score
+
+    def tier_print(Data):
+        tmp_list = np.full((4,6),-1)
+        for lp in range(len(Data.arr_temp)):
+            for row in range(len(Data.arr_temp[0])):
+
 
 
 class Asc:
@@ -1114,7 +1120,7 @@ class UpiPlayer:
         self.positions = [Position(), Position()]
 
     def upi(self):
-        engine_name = "Gale"
+        engine_name = "Hanna"
         version = "1.0"
         author = "Takato Kobayashi"
         print("id name", engine_name + version)
@@ -1182,7 +1188,7 @@ class UpiPlayer:
 
 
 if __name__ == "__main__":
-    tumo_index_count = 0
+    tumo_index_count = random.randint(0,65535)
     count = 0
     token = "isready"
     upi = UpiPlayer()
@@ -1200,7 +1206,8 @@ if __name__ == "__main__":
             cmd = tumos[tumo_index_count].split(' ')
             upi.tumo(cmd[1:])
             count = 1
-            tumo_index_count += 1
+            print("ツモ番号 ", tumo_index_count, "\n")
+            tumo_index_count = random.randint(0, 65535)
             token = "go"
 
         # 今回のゲームで使うツモ128個
@@ -1214,9 +1221,8 @@ if __name__ == "__main__":
         # 時間のかかる前処理はここで。
         elif token == "isready":
             upi.isready()
-            token = "go"
+            token = "next"
             ob = Data()
-            pass
             # 思考開始する局面を作る。
         # elif token == "position":
         #     upi.position(cmd[1:])
@@ -1224,7 +1230,7 @@ if __name__ == "__main__":
         # 思考開始の合図。エンジンはこれを受信すると思考を開始。
         elif token == "go":
             count += 1
-            turn = 15
+            turn = 12
             upi.go()
             if count > turn:
                 Field.pretty_print(upi.positions[0].field)
