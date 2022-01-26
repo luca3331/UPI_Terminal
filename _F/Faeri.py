@@ -398,7 +398,7 @@ class Field:
                     else:
                         temp_arr[lp1][lp2] = -1
                     temp_arr[lp1][lp2] = 0
-                    continue
+
         return temp_arr
 
     def arr_score_add(self):

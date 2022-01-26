@@ -112,7 +112,7 @@ class Tree:
     """
     関連性行列による定形配置法に木構造を利用した処理
     1/24現在はdepth = 2にしか対応していない．Tree()の宣言部分をdepthによって動的に処理出来たら多分いける
-    ----------階層関係-------------
+    ----------関係-------------
     tree_proc(self, pos1, positions_common, depth):
         tree_search_impl(self, move, depth, pos1, root_count, positions_common)
             plt_proc(self, pos1)
@@ -543,17 +543,15 @@ class Field:
                     continue
                 if def_arr[lp1] != def_arr[lp2]:
                     if lp1 == lp2 + 6 and lp1 % 6 == lp2 % 6:
-                        pass
-                    elif lp1 == lp2 - 6 and lp1 % 6 == lp2 % 6:
-                        pass
-                    elif lp1 // 6 == lp2 // 6 and lp1 == lp2 - 1:
-                        pass
-                    elif lp1 // 6 == lp2 // 6 and lp1 == lp2 + 1:
-                        pass
-                    else:
                         temp_arr[lp1][lp2] = -1
-                    temp_arr[lp1][lp2] = 0
-                    continue
+                    elif lp1 == lp2 - 6 and lp1 % 6 == lp2 % 6:
+                        temp_arr[lp1][lp2] = -1
+                    elif lp1 // 6 == lp2 // 6 and lp1 == lp2 - 1:
+                        temp_arr[lp1][lp2] = -1
+                    elif lp1 // 6 == lp2 // 6 and lp1 == lp2 + 1:
+                        temp_arr[lp1][lp2] = -1
+                    else:
+                        temp_arr[lp1][lp2] = 0
         return temp_arr
 
     def arr_score_add(self):
@@ -611,6 +609,9 @@ class Field:
         # # def_arr_t4 = def_lib[1]
 
         return def_arr_tier[tier]
+
+    def match_list_tier(self, tier):
+        t1 = [[]]
 
     def match_score_tale(self, tier):  # 土台の連鎖尾部分　右から3列
         """
@@ -1044,6 +1045,7 @@ def search(pos1, pos2, positions_common, depth):
         return moves[0]
     pos1.do_move(move, positions_common)
     Field.pretty_print(pos1.field)  # 設置後の盤面を表す
+    print(Field.h_tier, Field.t_tier)
 
     if move == Move.none():
         return False
@@ -1056,6 +1058,11 @@ def tree_root(pos1, positions_common, depth):
     root = Tree()
     root.init_child_node()
     best_score, best_move = Tree.tree_proc(root, pos1, positions_common, depth)
+    print(best_score)
+    while best_score < 0 and Field.t_tier < 6:
+        Field.t_tier += 1
+        score, _ = tree_root(pos1, positions_common, depth)
+
     return best_score, best_move
 
 

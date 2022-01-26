@@ -1,0 +1,32 @@
+1/24現在，状態行列関連のメソッドはとても可読性の低いコードになっている．
+メソッドの名前もすごくわかりにくい
+
+人に見せられない出来になっているので作り直し
+
+現在のメソッド
+arr_1_to_4()
+
+arr_score_add()
+ return temp_arr 1*24のテンプレートリストから4*6の状態行列を返却
+tri_temp_comp()
+
+match_score_head()
+
+match_score_tale()
+
+head_tale_merge()
+
+match_score()
+
+match_proc()
+
+is_next_to(row, col, lp1, lp2):
+ return bool
+ 縦横座標のセットを2つ受け取り，それぞれの座標が隣接しているかどうかを判定する
+ 
+ 
+
+make_tri_list():
+ return tri_list
+ 現在の盤面の状態行列を返却する
+
