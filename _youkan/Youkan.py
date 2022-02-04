@@ -273,7 +273,7 @@ class Tree:
         tri_list = Field.make_tri_list(pos1.field)
         asc = Asc()
         best_score = -9999
-        tier_score_list = [-1] * len(Data.arr_temp)
+        tier_score_list = [-1] * len(Data.)
         for lp in range(len(Data.arr_temp)):
             tem_list = asc.asc_proc(lp)
             tier_score_list[lp - 1] = Field.match_score(pos1.field, tem_list, tri_list) / Field.max_score_proc(pos1.field)
