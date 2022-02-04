@@ -135,6 +135,7 @@ class Tree:
         self.ave_score = -1
         self.score = -1
         self.tri_list = np.full((24, 24), -1)
+        self.tier = 0
         self.n1 = None
         self.n2 = None
         self.n3 = None
@@ -204,17 +205,28 @@ class Tree:
                 com = copy.copy(positions_common)
                 com.future_ojama = copy.deepcopy(positions_common.future_ojama)
                 pos.pre_move(move, com)
-                # Field.pretty_print(pos.field)
                 score, tri_list = self.plt_proc(pos)
-                pr_name = 'n' + str(root_count + 1)
-                myname = 'n' + str(ct + 1)
-                pr_object = getattr(self, pr_name)
-                my_object = getattr(pr_object, myname)
-                pr_score = self.score
+                puyo1 = pos.field.get_puyo(move.pivot_sq[0], move.pivot_sq[1])
+                puyo2 = pos.field.get_puyo(move.child_sq[0], move.child_sq[1])
+                searching_pos = np.zeros((Field.X_MAX, Field.Y_MAX), dtype=bool)
+                count1 = pos.field.count_connection(puyo1, move.pivot_sq[0], move.pivot_sq[1], searching_pos)
+                count2 = pos.field.count_connection(puyo2, move.child_sq[0], move.child_sq[1], searching_pos)
+                if count1 < 4 and count2 < 4:
+                    score *= (count1 + count2) / 2
+                if pos.field.floors_bounds_bool():
+                    score = -9999
+                if root_count != None:
+                    pr_name = 'n' + str(root_count + 1)
+                    myname = 'n' + str(ct + 1)
+                    pr_object = getattr(self, pr_name)
+                    my_object = getattr(pr_object, myname)
+                    pr_score = self.score
+                else:
+                    my_object = getattr(self, 'n' + str(ct + 1))
+
                 setattr(my_object, "score", score)
                 setattr(my_object, "move", move)
                 setattr(my_object, "tri_list", tri_list)
-                setattr(my_object, "total_score", score + pr_score)
             if depth == 1:
                 pos = copy.deepcopy(pos1)
                 com = copy.copy(positions_common)
@@ -259,15 +271,20 @@ class Tree:
         """
 
         tri_list = Field.make_tri_list(pos1.field)
-        ob = Asc()
+        asc = Asc()
+        best_score = -9999
+        tier_score_list = [-1] * 8
+        for lp in range(len(Data.arr_temp)):
+            tem_list = asc.asc_proc(lp)
+            tier_score_list[lp - 1] = Field.match_score(pos1.field, tem_list, tri_list) / Field.max_score_proc(pos1.field)
 
-        for lp in range(1, len(Data.arr_temp)):
-            tem_list = ob.asc_proc(lp)
-            score = Field.match_score(pos1.field, tem_list, tri_list) / Field.max_score_proc(pos1.field)
-            if score > 0:
-                break
+        for lp in range(len(tier_score_list)):
+            if best_score < tier_score_list[lp]:
+                best_score = tier_score_list[lp]
+                Data.current_tier = lp + 1
+                self.tier = lp + 1
 
-        return score, tri_list
+        return best_score, tri_list
 
 
 class Data:
@@ -304,14 +321,14 @@ class Data:
                 [2, 2, 3, 7, 8, 9, 1, 1, 2, 3, 3, 4, 1, 2, 3, 10, 11, 4, 12, 13, 14, 4, 4, 15],
                 [2, 2, 3, 7, 8, 4, 1, 1, 2, 3, 3, 4, 1, 2, 3, 4, 4, 9, 10, 11, 12, 13, 14, 0],
                 [2, 2, 7, 4, 4, 4, 1, 1, 2, 3, 3, 3, 1, 2, 3, 8, 4, 9, 10, 11, 12, 0, 13, 0]]  # 定形を1*24で表したリスト
-    arr_temp_bias = [[500, 500, 500, 500, 1000, -999999, 100, 100, 100, 100, 100, 100, 100],
-                     [500, 500, 500, 500, 1000, -999999, 100, 100, 100, 100, 100, 100, 100],
-                     [500, 500, 500, 500, 1000, -999999, 100, 100, 100, 100, 100, 100, 100],
-                     [500, 500, 500, 500, 1000, -999999, 100, 100, 100, 100, 100, 100, 100],
-                     [500, 500, 500, 500, 1000, -999999, 100, 100, 100, 100, 100, 100, 100],
-                     [500, 500, 500, 500, 1000, -999999, 100, 100, 100, 100, 100, 100, 100, 100, 100],
-                     [500, 500, 500, 500, 1000, -999999, 100, 100, 100, 100, 100, 100, 100, 100],
-                     [500, 500, 500, 500, 1000, -999999, 100, 100, 100, 100, 100, 100, 100]]
+    arr_temp_bias = [[500, 400, 300, 200, 1000, -999999, 100, 100, 100, 100, 100, 100, 100],
+                     [500, 400, 300, 200, 1000, -999999, 100, 100, 100, 100, 100, 100, 100],
+                     [500, 400, 300, 200, 1000, -999999, 100, 100, 100, 100, 100, 100, 100],
+                     [500, 400, 300, 200, 1000, -999999, 100, 100, 100, 100, 100, 100, 100],
+                     [500, 400, 300, 200, 1000, -999999, 100, 100, 100, 100, 100, 100, 100],
+                     [500, 400, 300, 200, 1000, -999999, 100, 100, 100, 100, 100, 100, 100, 100, 100],
+                     [500, 400, 300, 200, 1000, -999999, 100, 100, 100, 100, 100, 100, 100, 100],
+                     [500, 400, 300, 200, 1000, -999999, 100, 100, 100, 100, 100, 100, 100]]
     taboo_set = [[[1, 2], [1, 10], [2, 3], [2, 11], [3, 4], [3, 7], [3, 12], [4, 7], [4, 8], [4, 13]],
                  [[1, 2], [1, 9], [2, 3], [2, 10], [3, 4], [3, 7], [3, 8], [3, 11], [4, 12]],
                  [[1, 2], [1, 9], [2, 3], [2, 10], [3, 4], [3, 7], [3, 8], [3, 11], [4, 12]],
@@ -322,9 +339,10 @@ class Data:
                   [4, 12], [4, 13], [4, 14], [4, 15]],
                  [[1, 2], [1, 10], [2, 3], [2, 11], [3, 4], [3, 7], [3, 8], [3, 12], [4, 9], [4, 13], [4, 14]],
                  [[1, 2], [1, 10], [2, 3], [2, 7], [2, 11], [3, 4], [3, 8], [3, 9], [3, 12], [4, 7], [4, 9], [4, 13]]]
-    edge_bias = [2.0, 1.1, 1.0, 1.0, 1.1, 1.2]
+    edge_bias = [2.5, 2.1, 1.0, 1.0, 1.1, 1.5]
     asc_mtx = np.full((10, 24, 24), -1)
     asc_mtx_score = np.full((10, 24, 24), -1.0)
+    current_tier = 1
 
     def current(tier):
         """
@@ -340,10 +358,10 @@ class Data:
         return arr, bias, taboo, asc, asc_score
 
     def tier_print(Data):
-        tmp_list = np.full((4,6),-1)
+        tmp_list = np.full((4, 6), -1)
         for lp in range(len(Data.arr_temp)):
             for row in range(len(Data.arr_temp[0])):
-
+                pass
 
 
 class Asc:
@@ -358,7 +376,6 @@ class Asc:
     def asc_proc(self, tier):
         """
         テンプレート行列を作るメインメソッド
-        :param tier: tier1は，各種要素の0番目に格納しているので-1している
         :return: テンプレート行列
         """
 
@@ -421,7 +438,7 @@ class Asc:
         return asc_score
 
     def asc_ready(self):
-        for lp in range(len(Data.arr_temp) - 1):
+        for lp in range(len(Data.arr_temp)):
             tier = lp
             value = Data.current(tier)
             asc_ = self.make_asc_mtx(value[0], value[2], value[3])
@@ -634,6 +651,7 @@ class Field:
             score = np.count_nonzero(delete_pos) * max(score, 1) * 10
         return score, delete_pos
 
+
     def delete_puyo(self, delete_pos):
         """
         引数で与えられた場所を空にする。消えるぷよの上下左右1マス以内にお邪魔ぷよがあれば消す。
@@ -736,39 +754,6 @@ class Field:
     Y_match = 4
     size_def = X_match * Y_match
     temp_arr = np.full((size_def, size_def), -1)
-    temp_score = [0, 320, 200, 100, 50, -1000]
-    arr_score_added = [-1] * 24
-    h_tier = 1
-    t_tier = 1
-
-    def arr_1_to_4(self):
-        """
-        1*24のテンプレートリストから，4*6のテンプレート行列を作成する
-        :return: 4*6のテンプレート行列
-        """
-        size_def = self.size_def
-        def_arr = self.head_tale_merge()
-        temp_arr = np.full((size_def, size_def), -1)
-        for lp1 in range(size_def):  # 1*24の色格納リストから，4*6の状態行列を作成している？
-            for lp2 in range(size_def):
-                if def_arr[lp1] == 0 or def_arr[lp2] == 0:
-                    temp_arr[lp1][lp2] = 0
-                    continue
-                if def_arr[lp1] == def_arr[lp2]:
-                    temp_arr[lp1][lp2] = 1
-                    continue
-                if def_arr[lp1] != def_arr[lp2]:
-                    if lp1 == lp2 + 6 and lp1 % 6 == lp2 % 6:
-                        temp_arr[lp1][lp2] = -1
-                    elif lp1 == lp2 - 6 and lp1 % 6 == lp2 % 6:
-                        temp_arr[lp1][lp2] = -1
-                    elif lp1 // 6 == lp2 // 6 and lp1 == lp2 - 1:
-                        temp_arr[lp1][lp2] = -1
-                    elif lp1 // 6 == lp2 // 6 and lp1 == lp2 + 1:
-                        temp_arr[lp1][lp2] = -1
-                    else:
-                        temp_arr[lp1][lp2] = 0
-        return temp_arr
 
     def match_score(self, temp_arr, tri_list):
         """
@@ -777,7 +762,6 @@ class Field:
         :return:その着手の点数
         """
         score = 0
-        # max_score = self.max_score_proc()
         for i in range(self.X_match * self.Y_match):
             for j in range(self.X_match * self.Y_match):
                 score += temp_arr[i][j] * tri_list[i][j]
@@ -793,11 +777,11 @@ class Field:
         max_score = 0
         for lp1 in range(self.size_def):
             for lp2 in range(self.size_def):
-                if self.arr_score_added[lp1] == 0 or self.arr_score_added[lp2] == 0:
+                if Data.asc_mtx_score[Data.current_tier][lp1][lp2] == 0 or Data.asc_mtx_score[Data.current_tier][lp1][lp2] == 0:
                     max_score += 0
                     continue
                 else:
-                    max_score += (abs(self.arr_score_added[lp1]) + abs(self.arr_score_added[lp2])) / 2
+                    max_score += (abs(Data.asc_mtx_score[Data.current_tier][lp1][lp2]) + abs(Data.asc_mtx_score[Data.current_tier][lp1][lp2])) / 2
 
         return max_score
 
@@ -1109,7 +1093,7 @@ def tree_root(pos1, positions_common, depth):
     root = Tree()
     root.init_child_node()
     best_score, best_move = Tree.tree_proc(root, pos1, positions_common, depth)
-    print(best_score)
+    print("↓Tier", root.tier)
 
     return best_score, best_move
 
@@ -1144,8 +1128,8 @@ class UpiPlayer:
                 self.common_info.rule.autodrop_time = int(rules[i + 1])
 
     def isready(self):
-        ob = Asc()
-        ob.asc_ready()
+        asc = Asc()
+        asc.asc_ready()
         print("readyok")
 
     def position(self, pfen):
@@ -1157,7 +1141,7 @@ class UpiPlayer:
         self.common_info.future_ojama.time_until_fall_ojama = int(pfen[6])
 
     def go(self):
-        move = search(self.positions[0], self.positions[1], self.common_info, 2)
+        move = search(self.positions[0], self.positions[1], self.common_info, 1)
 
         print('bestmove', move.to_upi())
 
@@ -1222,7 +1206,7 @@ if __name__ == "__main__":
         elif token == "isready":
             upi.isready()
             token = "next"
-            ob = Data()
+            data = Data()
             # 思考開始する局面を作る。
         # elif token == "position":
         #     upi.position(cmd[1:])
