@@ -1,7 +1,7 @@
 from enum import Enum
 import numpy as np
 import copy
-
+import random
 
 # 思考エンジン用ライブラリのimport
 import torch
@@ -739,7 +739,7 @@ class UpiPlayer:
 
     def tumo(self, tumos):
         self.common_info.tumo_pool = [Tumo(Puyo.to_puyo(t[0]), Puyo.to_puyo(t[1])) for t in tumos]
-        self.common_info.tumo_pfen = tumos
+        self.common_info.tumo_pfen = tumos # UPIのTumoインスタンスに変換される前のpfenTumoを格納しておく
 
     def rule(self, rules):
         for i in range(0, len(rules), 2):
@@ -755,10 +755,14 @@ class UpiPlayer:
                 self.common_info.rule.autodrop_time = int(rules[i + 1])
 
     def isready(self):
+        # model loading
         model_path = './_model/model_100_epochs.pth'
         model_dict = torch.load(model_path, map_location=torch.device('cpu'))
         self.cnn_model.load_state_dict(model_dict)
         self.cnn_model.eval()
+
+        # tumo loading
+        self.tumo_index = random.randint(0, 63355)
         print("readyok")
 
     def position(self, pfen):
@@ -785,7 +789,7 @@ class UpiPlayer:
 
 
 if __name__ == "__main__":
-    token = ""
+    token = "isready"
     upi = UpiPlayer()
     while token != "quit":
         cmd = input().split(' ')

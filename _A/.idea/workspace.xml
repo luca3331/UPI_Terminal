@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="fdc37508-9a35-4968-a499-29a48e14378e" name="変更" comment="">
+      <change afterPath="$PROJECT_DIR$/design_23chainer.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Azusa.py" beforeDir="false" afterPath="$PROJECT_DIR$/Azusa.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arr_alt.py" beforeDir="false" afterPath="$PROJECT_DIR$/arr_alt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_B/Bridget_01.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_B/Bridget_01.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_C/Cate.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_C/Cate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_C/arr_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_C/arr_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_D/Dolly.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_D/Dolly.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_E/Emily.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_E/Emily.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_E/Woody.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_E/Woody.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_E/test_arr_1to4.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_E/test_arr_1to4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_F/Faeri.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_F/Faeri.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_F/Image_Cutter.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_F/Image_Cutter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_F/scratch.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_F/scratch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_G/Gale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_G/Gale.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../_H/Hanna.py" beforeDir="false" afterPath="$PROJECT_DIR$/../_H/Hanna.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../__ESC/Engine_Test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../__ESC/Engine_Test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../__ESC/Temp_Mtx.py" beforeDir="false" afterPath="$PROJECT_DIR$/../__ESC/Temp_Mtx.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2GDDJJCEBG30BZ6msmDqdD4kCnm" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+  </component>
+  <component name="RunManager" selected="Python.Hanna">
+    <configuration name="Azusa" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="_A" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$USER_HOME$/.local/share/virtualenvs/GitHub-3kJsv0M4/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Azusa.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Hanna" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="_A" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$USER_HOME$/.pyenv/versions/3.8.6/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../_H" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../_H/Hanna.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.Azusa" />
+      <item itemvalue="Python.Hanna" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="アプリケーションレベル" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="デフォルトタスク">
+      <changelist id="fdc37508-9a35-4968-a499-29a48e14378e" name="変更" comment="" />
+      <created>1665914187924</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1665914187924</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
